@@ -257,11 +257,13 @@ function renderCalendar() {
   const today = todayISO();
 
   const past = data.events.filter((e) => e.event_date <= today && e.games.some((g) => g.kind === "played"));
-  const shownPast = past.slice(-6);
+  // celá historie od založení – posuvná, otevírá se sjetá na nejnovější termín
+  const pastWrap = el("li", { class: "cal-past" });
+  const pastList = el("ol", { class: "cal-sublist" });
 
-  shownPast.forEach((ev, i) => {
-    const isLast = i === shownPast.length - 1;
-    const scale = isLast ? 7 : i + 1;
+  past.forEach((ev, i) => {
+    const isLast = i === past.length - 1;
+    const scale = isLast ? 7 : Math.max(1, 6 - (past.length - 1 - i));
     const row = el("li", {
       class: "cal-row" + (isLast ? " cal-row--now" : "") + (isFriday(ev.event_date) ? "" : " cal-row--offday"),
       style: `--scale:${scale}`,
@@ -285,8 +287,10 @@ function renderCalendar() {
       tools.append(el("button", { class: "cal-tool", text: "✎", title: "Upravit termín", onclick: () => openEventEditor(ev) }));
     }
     if (tools.childNodes.length) row.append(tools);
-    list.append(row);
+    pastList.append(row);
   });
+  pastWrap.append(pastList);
+  list.append(pastWrap);
 
   list.append(el("li", { class: "cal-divider", text: `dnes · ${fmtDate(today)}` }));
 
@@ -340,6 +344,8 @@ function renderCalendar() {
     }
     list.append(row);
   });
+
+  pastWrap.scrollTop = pastWrap.scrollHeight;
 }
 
 // ---------- Galerie ----------

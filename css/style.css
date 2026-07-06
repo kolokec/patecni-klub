@@ -407,6 +407,13 @@ button:focus-visible, .tile:focus-visible, input:focus-visible{
 .tile.show-info .tile-info{ opacity:1; pointer-events:auto; }
 .tile-btns{ display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
 
+.tile--new{
+  outline:2px solid var(--amber);
+  outline-offset:2px;
+  box-shadow:0 0 28px rgba(255,176,102,0.45);
+  transition:box-shadow .4s ease;
+}
+
 .tile--placeholder{ min-height:180px; }
 .tile--placeholder{
   background:repeating-linear-gradient(135deg, var(--bg-2), var(--bg-2) 10px, #171c33 10px, #171c33 20px);

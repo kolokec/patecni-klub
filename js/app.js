@@ -530,15 +530,41 @@ async function guard(fn, okMsg) {
   }
 }
 
+// Po dobu ukládání zablokuje odesílací tlačítko a ukáže „Ukládám…“
+function withBusy(form, fn) {
+  return async (e) => {
+    e.preventDefault();
+    const btn = form.querySelector("[type=submit]");
+    const label = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "Ukládám…";
+    try {
+      await fn();
+    } finally {
+      btn.disabled = false;
+      btn.textContent = label;
+    }
+  };
+}
+
+// Sroluje na dlaždici hry a krátce ji zvýrazní
+function highlightGame(name) {
+  const tile = [...document.querySelectorAll(".tile")]
+    .find((t) => t.querySelector(".tile-name")?.textContent === name);
+  if (!tile) return;
+  tile.scrollIntoView({ behavior: "smooth", block: "center" });
+  tile.classList.add("tile--new");
+  setTimeout(() => tile.classList.remove("tile--new"), 3000);
+}
+
 function openAddGame() {
   const dlg = $("dlgAddGame");
   $("agName").value = ""; delete $("agName").dataset.gameId;
   $("agMin").value = ""; $("agMax").value = ""; $("agFile").value = "";
   $("agError").hidden = true;
-  $("formAddGame").onsubmit = async (e) => {
-    e.preventDefault();
+  $("formAddGame").onsubmit = withBusy($("formAddGame"), async () => {
+    const name = $("agName").value.trim();
     try {
-      const name = $("agName").value.trim();
       const min = $("agMin").value ? +$("agMin").value : null;
       const max = $("agMax").value ? +$("agMax").value : null;
       const file = $("agFile").files[0] || null;
@@ -550,14 +576,17 @@ function openAddGame() {
       } else {
         await api.addGame({ name, minPlayers: min, maxPlayers: max, file });
       }
-      dlg.close();
-      await reload();
-      toast(`„${name}“ je ve tvé sbírce.`);
     } catch (err) {
       $("agError").textContent = err.message;
       $("agError").hidden = false;
+      return;
     }
-  };
+    dlg.close();
+    playerFilter = "all"; // ať novou hru neschová zapnutý filtr
+    try { await reload(); } catch (err) { toast(err.message); return; }
+    toast(`„${name}“ je ve tvé sbírce.`);
+    highlightGame(name);
+  });
   dlg.showModal();
 }
 
@@ -639,22 +668,23 @@ function openGameEdit(g) {
   $("geMax").value = g.max_players ?? "";
   $("geFile").value = "";
   $("geError").hidden = true;
-  $("formGameEdit").onsubmit = async (e) => {
-    e.preventDefault();
+  $("formGameEdit").onsubmit = withBusy($("formGameEdit"), async () => {
     try {
       const min = $("geMin").value ? +$("geMin").value : null;
       const max = $("geMax").value ? +$("geMax").value : null;
       if (min !== g.min_players || max !== g.max_players) await api.updateGamePlayers(g.id, min, max);
       const file = $("geFile").files[0];
       if (file) await api.uploadImage(g.id, file);
-      dlg.close();
-      await reload();
-      toast("Uloženo.");
     } catch (err) {
       $("geError").textContent = err.message;
       $("geError").hidden = false;
+      return;
     }
-  };
+    dlg.close();
+    try { await reload(); } catch (err) { toast(err.message); return; }
+    toast("Uloženo.");
+    highlightGame(g.name);
+  });
   dlg.showModal();
 }
 

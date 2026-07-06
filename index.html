@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Páteční klub</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/config.js"></script>
+  <script src="js/demo-data.js"></script>
+</head>
+<body>
+  <div class="scene" aria-hidden="true"></div>
+
+  <div class="page">
+    <header class="topbar">
+      <h1 class="wordmark">Páteční<span>klub</span></h1>
+      <div class="login" id="loginArea"></div>
+    </header>
+
+    <div id="notice" class="notice" hidden></div>
+    <div id="memberActions" class="actions" hidden></div>
+
+    <div class="layout" id="layout">
+      <aside class="calendar" id="calendarRail" aria-label="Minikalendář">
+        <h2 class="rail-title">Kalendář</h2>
+        <ol class="cal-list" id="calList"></ol>
+      </aside>
+      <main class="gallery" id="gallery"></main>
+    </div>
+
+    <footer class="site-footer">Established 27.02.2026</footer>
+  </div>
+
+  <!-- Přihlášení člena -->
+  <dialog id="dlgPassword" class="dlg">
+    <form method="dialog" class="dlg-form" id="formPassword">
+      <div class="dlg-avatar" id="pwAvatar"></div>
+      <h2 class="dlg-title" id="pwTitle">Přihlášení</h2>
+      <label class="field"><span>Heslo</span>
+        <input type="password" id="pwInput" autocomplete="current-password" required>
+      </label>
+      <p class="dlg-error" id="pwError" hidden></p>
+      <div class="dlg-buttons">
+        <button type="button" class="btn btn-ghost" data-close>Zpět</button>
+        <button type="submit" class="btn btn-primary">Přihlásit</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Host: výběr člena -->
+  <dialog id="dlgHostPick" class="dlg">
+    <div class="dlg-form">
+      <h2 class="dlg-title">Čí sbírku chceš vidět?</h2>
+      <p class="dlg-hint">Host vidí jen hry a hledáček jednoho člena – jako nápovědu na dárky.</p>
+      <div class="dlg-tiles" id="hostTiles"></div>
+      <div class="dlg-buttons">
+        <button type="button" class="btn btn-ghost" data-close>Zpět</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Host: otázka -->
+  <dialog id="dlgHostQuestion" class="dlg">
+    <form method="dialog" class="dlg-form" id="formHostQuestion">
+      <h2 class="dlg-title" id="hqTitle">Otázka</h2>
+      <p class="dlg-hint" id="hqQuestion"></p>
+      <label class="field"><span>Odpověď</span>
+        <input type="text" id="hqInput" autocomplete="off" required>
+      </label>
+      <p class="dlg-error" id="hqError" hidden></p>
+      <div class="dlg-buttons">
+        <button type="button" class="btn btn-ghost" data-close>Zpět</button>
+        <button type="submit" class="btn btn-primary">Vstoupit</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Přidání hry do sbírky -->
+  <dialog id="dlgAddGame" class="dlg">
+    <form method="dialog" class="dlg-form" id="formAddGame">
+      <h2 class="dlg-title">Přidat hru do sbírky</h2>
+      <label class="field suggest-wrap"><span>Název hry</span>
+        <input type="text" id="agName" autocomplete="off" required>
+        <div class="suggest" id="agSuggest" hidden></div>
+      </label>
+      <div class="field-row">
+        <label class="field"><span>Hráčů od</span><input type="number" id="agMin" min="1" max="99"></label>
+        <label class="field"><span>do</span><input type="number" id="agMax" min="1" max="99"></label>
+      </div>
+      <label class="field"><span>Fotka krabice (nepovinné)</span>
+        <input type="file" id="agFile" accept="image/*">
+      </label>
+      <p class="dlg-error" id="agError" hidden></p>
+      <div class="dlg-buttons">
+        <button type="button" class="btn btn-ghost" data-close>Zrušit</button>
+        <button type="submit" class="btn btn-primary">Přidat</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Přidání do hledáčku -->
+  <dialog id="dlgWishlist" class="dlg">
+    <form method="dialog" class="dlg-form" id="formWishlist">
+      <h2 class="dlg-title">Přidat do hledáčku</h2>
+      <p class="dlg-hint">Hra, kterou si přeješ pořídit. Uvidí ji všichni – i rodina hledající dárek.</p>
+      <label class="field suggest-wrap"><span>Název hry</span>
+        <input type="text" id="wlName" autocomplete="off" required>
+        <div class="suggest" id="wlSuggest" hidden></div>
+      </label>
+      <p class="dlg-error" id="wlError" hidden></p>
+      <div class="dlg-buttons">
+        <button type="button" class="btn btn-ghost" data-close>Zrušit</button>
+        <button type="submit" class="btn btn-primary">Přidat</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Návrh hry na budoucí termín -->
+  <dialog id="dlgPropose" class="dlg">
+    <form method="dialog" class="dlg-form" id="formPropose">
+      <h2 class="dlg-title" id="prTitle">Navrhnout hru</h2>
+      <label class="field suggest-wrap"><span>Název hry</span>
+        <input type="text" id="prName" autocomplete="off" required>
+        <div class="suggest" id="prSuggest" hidden></div>
+      </label>
+      <p class="dlg-error" id="prError" hidden></p>
+      <div class="dlg-buttons">
+        <button type="button" class="btn btn-ghost" data-close>Zrušit</button>
+        <button type="submit" class="btn btn-primary">Navrhnout</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Hodnocení termínu -->
+  <dialog id="dlgRate" class="dlg">
+    <form method="dialog" class="dlg-form" id="formRate">
+      <h2 class="dlg-title" id="rateTitle">Hodnocení</h2>
+      <p class="dlg-hint" id="rateGames"></p>
+      <div class="rate-scale" id="rateScale"></div>
+      <p class="dlg-error" id="rateError" hidden></p>
+      <div class="dlg-buttons">
+        <button type="button" class="btn btn-ghost" data-close>Zavřít</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Úprava hry (vlastníci) -->
+  <dialog id="dlgGameEdit" class="dlg">
+    <form method="dialog" class="dlg-form" id="formGameEdit">
+      <h2 class="dlg-title" id="geTitle">Upravit hru</h2>
+      <div class="field-row">
+        <label class="field"><span>Hráčů od</span><input type="number" id="geMin" min="1" max="99"></label>
+        <label class="field"><span>do</span><input type="number" id="geMax" min="1" max="99"></label>
+      </div>
+      <label class="field"><span>Nová fotka (nahradí stávající)</span>
+        <input type="file" id="geFile" accept="image/*">
+      </label>
+      <p class="dlg-error" id="geError" hidden></p>
+      <div class="dlg-buttons">
+        <button type="button" class="btn btn-ghost" data-close>Zrušit</button>
+        <button type="submit" class="btn btn-primary">Uložit</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Profil -->
+  <dialog id="dlgProfile" class="dlg">
+    <form method="dialog" class="dlg-form" id="formProfile">
+      <h2 class="dlg-title">Můj profil</h2>
+      <p class="dlg-hint dlg-hint--first" id="profFirst" hidden>Vítej poprvé! Přihlásil(a) ses dočasným heslem – nastav si teď prosím vlastní.</p>
+      <label class="field"><span>Nové heslo (nech prázdné, pokud neměníš)</span>
+        <input type="password" id="profPassword" autocomplete="new-password" minlength="6">
+      </label>
+      <hr class="dlg-sep">
+      <p class="dlg-hint">Host otázka – kdo ji zodpoví, uvidí tvoji sbírku a hledáček (tip na dárky).</p>
+      <label class="field"><span>Otázka</span>
+        <input type="text" id="profQuestion" autocomplete="off">
+      </label>
+      <label class="field"><span>Odpověď</span>
+        <input type="text" id="profAnswer" autocomplete="off">
+      </label>
+      <p class="dlg-error" id="profError" hidden></p>
+      <div class="dlg-buttons">
+        <button type="button" class="btn btn-ghost" data-close>Zavřít</button>
+        <button type="submit" class="btn btn-primary">Uložit</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Admin: termín -->
+  <dialog id="dlgEvent" class="dlg dlg-wide">
+    <form method="dialog" class="dlg-form" id="formEvent">
+      <h2 class="dlg-title" id="evTitle">Termín</h2>
+      <label class="field"><span>Datum</span>
+        <input type="date" id="evDate" required>
+      </label>
+      <div class="field suggest-wrap"><span class="field-label">Odehrané hry</span>
+        <div class="chip-list" id="evGamesList"></div>
+        <div class="field-row">
+          <input type="text" id="evGameName" placeholder="Název hry…" autocomplete="off">
+          <input type="text" id="evGameNote" placeholder="Poznámka (např. Rozšíření)">
+          <button type="button" class="btn btn-ghost" id="evGameAdd">Přidat</button>
+        </div>
+        <div class="suggest" id="evSuggest" hidden></div>
+      </div>
+      <div class="field"><span class="field-label">Kdo hrál</span>
+        <div class="check-row" id="evParticipants"></div>
+      </div>
+      <label class="field"><span>Hosté mimo klub (iniciály, oddělené čárkou)</span>
+        <input type="text" id="evGuests" autocomplete="off">
+      </label>
+      <label class="field"><span>Poznámka k termínu</span>
+        <input type="text" id="evNote" autocomplete="off">
+      </label>
+      <p class="dlg-error" id="evError" hidden></p>
+      <div class="dlg-buttons">
+        <button type="button" class="btn btn-ghost" data-close>Zrušit</button>
+        <button type="submit" class="btn btn-primary">Uložit termín</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" hidden></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+# Udržuje Supabase projekt (free tier) aktivní – bez dotazů by ho
+# Supabase po ~týdnu nečinnosti pozastavil.
+# Vyžaduje repo secrets: SUPABASE_URL a SUPABASE_ANON_KEY
+# (Settings → Secrets and variables → Actions).
+name: Supabase keep-alive
+
+on:
+  schedule:
+    - cron: "0 6 */3 * *"   # každé 3 dny v 6:00 UTC
+  workflow_dispatch:          # možnost ručního spuštění
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase
+        run: |
+          curl --fail --silent --show-error \
+            "${{ secrets.SUPABASE_URL }}/rest/v1/members?select=id&limit=1" \
+            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+            > /dev/null
+          echo "Supabase je vzhůru."

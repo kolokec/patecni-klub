@@ -382,28 +382,34 @@ function renderGallery() {
     .map((w) => gameById(w.game_id)).filter(Boolean)
     .sort((a, b) => a.name.localeCompare(b.name, "cs"));
 
-  const renderBlock = (member, isMine) => {
+  const renderBlock = (member, isMine, wishFirst = false) => {
     const games = ownedGames(member);
     const wl = wishlistGames(member);
     if (!games.length && !wl.length) return;
     const block = el("section", { class: "owner-block" });
-    block.append(el("h2", { class: "owner-title" }, [
-      document.createTextNode(isMine ? "Moje hry" : member.display_name),
-      el("span", { text: `${isMine ? member.display_name + " · " : ""}${gamesCount(games.length)}` }),
-    ]));
-    block.append(tilesGrid(games, member));
-    if (wl.length) {
-      block.append(el("h3", { class: "owner-title owner-title--wish" }, [
+    const gamesPart = [
+      el("h2", { class: "owner-title" }, [
+        document.createTextNode(isMine ? "Moje hry" : member.display_name),
+        el("span", { text: `${isMine ? member.display_name + " · " : ""}${gamesCount(games.length)}` }),
+      ]),
+      tilesGrid(games, member),
+    ];
+    const wishPart = wl.length ? [
+      el("h3", { class: "owner-title owner-title--wish" }, [
         document.createTextNode("Hledáček"),
         el("span", { text: `co si ${isMine ? "přeju" : member.display_name + " přeje"} pořídit` }),
-      ]));
-      block.append(tilesGrid(wl, member, true));
+      ]),
+      tilesGrid(wl, member, true),
+    ] : [];
+    for (const node of wishFirst ? [...wishPart, ...gamesPart] : [...gamesPart, ...wishPart]) {
+      block.append(node);
     }
     main.append(block);
   };
 
   if (hostView) {
-    renderBlock(hostView, false);
+    // host jde hlavně pro tip na dárek – hledáček patří nahoru
+    renderBlock(hostView, false, true);
     return;
   }
 

@@ -599,20 +599,25 @@ function openAddGame() {
 function openWishlist() {
   const dlg = $("dlgWishlist");
   $("wlName").value = ""; delete $("wlName").dataset.gameId;
+  $("wlFile").value = "";
   $("wlError").hidden = true;
-  $("formWishlist").onsubmit = async (e) => {
-    e.preventDefault();
+  $("formWishlist").onsubmit = withBusy($("formWishlist"), async () => {
+    let game;
     try {
-      const game = await resolveGame($("wlName"));
+      game = await resolveGame($("wlName"));
       await api.addWishlist(game.id);
-      dlg.close();
-      await reload();
-      toast(`„${game.name}“ přidáno do hledáčku.`);
+      const file = $("wlFile").files[0];
+      if (file) await api.uploadImage(game.id, file);
     } catch (err) {
       $("wlError").textContent = err.message;
       $("wlError").hidden = false;
+      return;
     }
-  };
+    dlg.close();
+    try { await reload(); } catch (err) { toast(err.message); return; }
+    toast(`„${game.name}“ přidáno do hledáčku.`);
+    highlightGame(game.name);
+  });
   dlg.showModal();
 }
 

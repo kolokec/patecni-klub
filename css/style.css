@@ -226,7 +226,18 @@ button:focus-visible, .tile:focus-visible, input:focus-visible{
   overflow-y:auto;
   overscroll-behavior:contain;
   scrollbar-width:thin;
-  scrollbar-color:rgba(139,150,179,0.35) transparent;
+  scrollbar-color:rgba(139,150,179,0.6) rgba(232,236,246,0.06);
+}
+/* náznak, že nahoře pokračuje starší historie */
+.cal-past::before{
+  content:"";
+  position:sticky;
+  top:0;
+  display:block;
+  height:20px;
+  margin-bottom:-20px;
+  background:linear-gradient(180deg, rgba(18,23,42,0.95), transparent);
+  pointer-events:none;
 }
 .cal-sublist{
   list-style:none; margin:0; padding:0;

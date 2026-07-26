@@ -69,12 +69,19 @@ function gameStats(game) {
   const played = data.events.filter(
     (e) => e.event_date <= todayISO() && e.games.some((eg) => eg.kind === "played" && eg.game_id === game.id)
   );
-  const scores = played.flatMap((e) => e.ratings.map((r) => r.score));
+  const scores = game.ratings.map((r) => r.score);
   return {
     count: played.length,
     last: played.length ? fmtDate(played[played.length - 1].event_date) : null,
     avg: scores.length ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1).replace(".", ",") : null,
   };
+}
+
+// Hodnotit smí jen ten, kdo hru fakticky někdy hrál
+function hasPlayed(game) {
+  return !!me && data.events.some(
+    (e) => e.participants.includes(me.id) && e.games.some((eg) => eg.kind === "played" && eg.game_id === game.id)
+  );
 }
 
 function toast(msg) {
@@ -274,15 +281,8 @@ function renderCalendar() {
       const g = gameById(eg.game_id);
       row.append(el("span", { class: "cal-game", text: g ? g.name + (eg.note ? ` (${eg.note})` : "") : "?" }));
     }
-    // hodnocení: jen účastník; úprava: jen admin
+    // úprava termínu: jen admin (hodnocení je teď u jednotlivých her v galerii)
     const tools = el("span", { class: "cal-tools" });
-    if (me && ev.participants.includes(me.id)) {
-      const mine = ev.ratings.find((r) => r.member_id === me.id);
-      tools.append(el("button", {
-        class: "cal-tool", text: mine ? `★ ${mine.score}` : "★",
-        title: "Ohodnotit termín (1–10)", onclick: () => openRate(ev),
-      }));
-    }
     if (me?.is_admin) {
       tools.append(el("button", { class: "cal-tool", text: "✎", title: "Upravit termín", onclick: () => openEventEditor(ev) }));
     }
@@ -504,6 +504,13 @@ function tile(g, sectionMember, isWishlist) {
           }));
         }
       }
+      if (hasPlayed(g)) {
+        const mine = g.ratings.find((r) => r.member_id === me.id);
+        btns.append(el("button", {
+          class: "btn btn-mini", text: mine ? `★ tvoje: ${mine.score}` : "★ ohodnotit",
+          onclick: (e) => { e.stopPropagation(); openRate(g); },
+        }));
+      }
     }
     if (btns.childNodes.length) info.append(btns);
   }
@@ -648,14 +655,14 @@ function openPropose(date) {
   dlg.showModal();
 }
 
-function openRate(ev) {
+function openRate(game) {
   const dlg = $("dlgRate");
-  $("rateTitle").textContent = `Jak bylo ${fmtDate(ev.event_date)}?`;
-  const names = ev.games.filter((g) => g.kind === "played").map((g) => gameById(g.game_id)?.name).filter(Boolean);
-  $("rateGames").textContent = names.join(" · ");
+  $("rateTitle").textContent = `Jak hodnotíš hru ${game.name}?`;
+  const stats = gameStats(game);
+  $("rateGames").textContent = `Hráno ${stats.count}×${stats.last ? ", naposledy " + stats.last : ""}`;
   const scale = $("rateScale");
   scale.textContent = "";
-  const mine = ev.ratings.find((r) => r.member_id === me.id);
+  const mine = game.ratings.find((r) => r.member_id === me.id);
   for (let s = 1; s <= 10; s++) {
     scale.append(el("button", {
       type: "button",
@@ -663,10 +670,10 @@ function openRate(ev) {
       text: s,
       onclick: async () => {
         try {
-          await api.rateEvent(ev.id, s);
+          await api.rateGame(game.id, s);
           dlg.close();
           await reload();
-          toast(`Uloženo: ${s}/10.`);
+          toast(`Uloženo: ${s}/10 pro „${game.name}“.`);
         } catch (err) {
           $("rateError").textContent = err.message;
           $("rateError").hidden = false;

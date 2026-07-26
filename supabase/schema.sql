@@ -72,11 +72,13 @@ create table event_participants (
   unique (event_id, member_id)
 );
 
+-- Hodnocení patří hře jako takové (ne konkrétnímu odehranému termínu) –
+-- člen dá hře jednu celkovou známku bez ohledu na to, kolikrát a kdy ji hrál.
 create table ratings (
-  event_id  uuid not null references events (id) on delete cascade,
+  game_id   uuid not null references games (id) on delete cascade,
   member_id uuid not null references members (id) on delete cascade,
   score     integer not null check (score between 1 and 10),
-  primary key (event_id, member_id)
+  primary key (game_id, member_id)
 );
 
 -- ---------- Pomocné funkce pro RLS ----------
@@ -216,14 +218,17 @@ create policy event_participants_insert on event_participants for insert to auth
 create policy event_participants_delete on event_participants for delete to authenticated
   using (is_admin() or member_id = current_member_id());
 
--- ratings: průměry jsou veřejné (tooltip); hodnotí jen účastník termínu
+-- ratings: průměry jsou veřejné (tooltip); hodnotit smí jen ten, kdo hru
+-- fakticky někdy hrál (byl účastníkem termínu, kde je vedená jako odehraná)
 create policy ratings_select on ratings for select using (true);
 create policy ratings_upsert on ratings for insert to authenticated
   with check (
     member_id = current_member_id()
     and exists (
-      select 1 from event_participants p
-      where p.event_id = ratings.event_id and p.member_id = current_member_id()
+      select 1
+      from event_participants p
+      join event_games eg on eg.event_id = p.event_id and eg.kind = 'played'
+      where p.member_id = current_member_id() and eg.game_id = ratings.game_id
     )
   );
 create policy ratings_update on ratings for update to authenticated

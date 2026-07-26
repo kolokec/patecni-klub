@@ -177,9 +177,9 @@ class SupabaseApi {
     if (error) throw new Error("Potvrzení účasti selhalo: " + error.message);
   }
 
-  async rateEvent(eventId, score) {
+  async rateGame(gameId, score) {
     const { error } = await this.sb.from("ratings")
-      .upsert({ event_id: eventId, member_id: this.memberId, score }, { onConflict: "event_id,member_id" });
+      .upsert({ game_id: gameId, member_id: this.memberId, score }, { onConflict: "game_id,member_id" });
     if (error) throw new Error("Uložení hodnocení selhalo: " + error.message);
   }
 
@@ -261,17 +261,18 @@ class DemoApi {
 }
 ["changePassword", "setHostSecret", "findOrCreateGame", "addGame", "updateGamePlayers", "uploadImage",
  "addOwner", "addWishlist", "removeWishlist", "ensureEvent", "proposeGame", "removeProposal",
- "confirmAttendance", "rateEvent", "adminSaveEvent"].forEach((fn) => {
+ "confirmAttendance", "rateGame", "adminSaveEvent"].forEach((fn) => {
   DemoApi.prototype[fn] = async () => { throw new Error(DEMO_MSG); };
 });
 
 // ---------- Normalizace do tvaru pro UI ----------
 
 function normalize({ members, games, owners, wishlist, events, eventGames, ratings, participants }) {
-  const gamesById = new Map(games.map((g) => [g.id, { ...g, owners: [] }]));
+  const gamesById = new Map(games.map((g) => [g.id, { ...g, owners: [], ratings: [] }]));
   for (const o of owners) gamesById.get(o.game_id)?.owners.push(o.member_id);
+  for (const r of ratings) gamesById.get(r.game_id)?.ratings.push(r);
 
-  const eventsById = new Map(events.map((e) => [e.id, { ...e, games: [], participants: [], guests: [], ratings: [] }]));
+  const eventsById = new Map(events.map((e) => [e.id, { ...e, games: [], participants: [], guests: [] }]));
   for (const eg of eventGames) eventsById.get(eg.event_id)?.games.push(eg);
   for (const p of participants) {
     const e = eventsById.get(p.event_id);
@@ -279,7 +280,6 @@ function normalize({ members, games, owners, wishlist, events, eventGames, ratin
     if (p.member_id) e.participants.push(p.member_id);
     else if (p.guest_name) e.guests.push(p.guest_name);
   }
-  for (const r of ratings) eventsById.get(r.event_id)?.ratings.push(r);
 
   return {
     members,

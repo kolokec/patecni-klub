@@ -330,15 +330,24 @@ function renderCalendar() {
         onclick: () => openPropose(date),
       }));
       if (i === 0) {
-        const attending = ev?.participants.includes(me.id);
-        tools.append(el("button", {
-          class: "cal-tool" + (attending ? " cal-tool--on" : ""),
-          text: attending ? "✓ budu tam" : "budu tam",
-          title: "Potvrdit účast na nejbližším termínu",
-          onclick: attending ? null : async () => {
-            await guard(() => api.confirmAttendance(date), "Účast zapsána. Tak v pátek!");
-          },
-        }));
+        const attendees = el("span", { class: "cal-attendees", title: "Kdo potvrdil účast" });
+        for (const m of data.members) {
+          const going = ev?.participants.includes(m.id);
+          const isSelf = m.id === me.id;
+          attendees.append(el("button", {
+            class: "cal-attendee" + (going ? " cal-attendee--on" : "") + (isSelf ? " cal-attendee--self" : ""),
+            text: m.initial,
+            disabled: !isSelf,
+            title: isSelf
+              ? (going ? "Zrušit svou účast" : "Potvrdit svou účast na nejbližším termínu")
+              : `${m.display_name}${going ? " potvrdil(a) účast" : " zatím nepotvrdil(a) účast"}`,
+            onclick: !isSelf ? null : async () => {
+              if (going) await guard(() => api.cancelAttendance(date), "Účast zrušena.");
+              else await guard(() => api.confirmAttendance(date), "Účast zapsána. Tak v pátek!");
+            },
+          }));
+        }
+        tools.append(attendees);
       }
       row.append(tools);
     }

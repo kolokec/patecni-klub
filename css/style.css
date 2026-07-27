@@ -305,6 +305,25 @@ button:focus-visible, .tile:focus-visible, input:focus-visible{
   cursor:default;
 }
 
+.cal-attendees{ display:flex; gap:4px; }
+.cal-attendee{
+  width:22px; height:22px;
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--display); font-stretch:condensed; font-weight:700;
+  font-size:0.66rem;
+  border-radius:6px;
+  border:1px solid var(--line);
+  color:var(--ink-1);
+  cursor:default;
+}
+.cal-attendee--on{
+  border-color:rgba(79,211,224,0.5);
+  color:var(--cyan);
+  background:rgba(79,211,224,0.12);
+}
+.cal-attendee--self{ cursor:pointer; }
+.cal-attendee--self:hover{ border-color:var(--cyan); color:var(--ink-0); }
+
 /* ---------- galerie ---------- */
 .filters{
   display:flex; align-items:center; gap:14px;

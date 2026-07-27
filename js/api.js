@@ -177,6 +177,13 @@ class SupabaseApi {
     if (error) throw new Error("Potvrzení účasti selhalo: " + error.message);
   }
 
+  async cancelAttendance(dateStr) {
+    const eventId = await this.ensureEvent(dateStr);
+    const { error } = await this.sb.from("event_participants").delete()
+      .eq("event_id", eventId).eq("member_id", this.memberId);
+    if (error) throw new Error("Odhlášení z účasti selhalo: " + error.message);
+  }
+
   async rateGame(gameId, score) {
     const { error } = await this.sb.from("ratings")
       .upsert({ game_id: gameId, member_id: this.memberId, score }, { onConflict: "game_id,member_id" });
@@ -261,7 +268,7 @@ class DemoApi {
 }
 ["changePassword", "setHostSecret", "findOrCreateGame", "addGame", "updateGamePlayers", "uploadImage",
  "addOwner", "addWishlist", "removeWishlist", "ensureEvent", "proposeGame", "removeProposal",
- "confirmAttendance", "rateGame", "adminSaveEvent"].forEach((fn) => {
+ "confirmAttendance", "cancelAttendance", "rateGame", "adminSaveEvent"].forEach((fn) => {
   DemoApi.prototype[fn] = async () => { throw new Error(DEMO_MSG); };
 });
 

@@ -331,7 +331,8 @@ function renderCalendar() {
         onclick: () => openPropose(date),
       }));
       if (i === 0) {
-        const attendees = el("span", { class: "cal-attendees", title: "Kdo potvrdil účast" });
+        tools.append(el("span", { class: "cal-attendees-label", text: "Kdo jde:" }));
+        const attendees = el("span", { class: "cal-attendees", title: "Klikni na svou iniciálu – potvrdíš nebo zrušíš účast" });
         for (const m of data.members) {
           const going = ev?.participants.includes(m.id);
           const isSelf = m.id === me.id;

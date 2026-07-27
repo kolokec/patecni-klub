@@ -305,6 +305,13 @@ button:focus-visible, .tile:focus-visible, input:focus-visible{
   cursor:default;
 }
 
+.cal-attendees-label{
+  font-size:0.62rem;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  color:var(--ink-1);
+  align-self:center;
+}
 .cal-attendees{ display:flex; gap:4px; }
 .cal-attendee{
   width:22px; height:22px;

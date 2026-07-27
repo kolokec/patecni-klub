@@ -20,6 +20,7 @@ function el(tag, props = {}, children = []) {
     else if (k === "html") node.innerHTML = v;
     else if (k.startsWith("on")) node.addEventListener(k.slice(2), v);
     else if (k === "style") node.style.cssText = v;
+    else if (typeof v === "boolean") { if (v) node.setAttribute(k, ""); }
     else if (v !== null && v !== undefined) node.setAttribute(k, v);
   }
   for (const c of [].concat(children)) if (c) node.append(c);

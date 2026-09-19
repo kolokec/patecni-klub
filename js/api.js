@@ -134,6 +134,17 @@ class SupabaseApi {
     if (error) throw new Error("Uložení vlastnictví selhalo: " + error.message);
   }
 
+  // Admin: nastaví přesný seznam vlastníků hry (nahradí stávající)
+  async setOwners(gameId, memberIds) {
+    const { error: delErr } = await this.sb.from("game_owners").delete().eq("game_id", gameId);
+    if (delErr) throw new Error("Úprava vlastníků selhala: " + delErr.message);
+    if (memberIds.length) {
+      const rows = memberIds.map((m) => ({ game_id: gameId, member_id: m }));
+      const { error } = await this.sb.from("game_owners").insert(rows);
+      if (error) throw new Error("Úprava vlastníků selhala: " + error.message);
+    }
+  }
+
   // Hledáček ------------------------------------------------
 
   async addWishlist(gameId) {
@@ -267,7 +278,7 @@ class DemoApi {
   async checkHostAnswer() { throw new Error(DEMO_MSG); }
 }
 ["changePassword", "setHostSecret", "findOrCreateGame", "addGame", "updateGamePlayers", "uploadImage",
- "addOwner", "addWishlist", "removeWishlist", "ensureEvent", "proposeGame", "removeProposal",
+ "addOwner", "setOwners", "addWishlist", "removeWishlist", "ensureEvent", "proposeGame", "removeProposal",
  "confirmAttendance", "cancelAttendance", "rateGame", "adminSaveEvent"].forEach((fn) => {
   DemoApi.prototype[fn] = async () => { throw new Error(DEMO_MSG); };
 });

@@ -498,12 +498,14 @@ function tile(g, sectionMember, isWishlist) {
         onclick: (e) => { e.stopPropagation(); guard(() => api.removeWishlist(g.id)); },
       }));
     } else if (!isWishlist) {
-      if (g.owners.includes(me.id)) {
+      const amOwner = g.owners.includes(me.id);
+      if (amOwner || me.is_admin) {
         btns.append(el("button", {
           class: "btn btn-mini", text: "upravit / fotka",
           onclick: (e) => { e.stopPropagation(); openGameEdit(g); },
         }));
-      } else {
+      }
+      if (!amOwner) {
         btns.append(el("button", {
           class: "btn btn-mini", text: "taky mám doma",
           onclick: (e) => { e.stopPropagation(); guard(() => api.addOwner(g.id), "Hra přidána i do tvé sbírky."); },
@@ -703,6 +705,18 @@ function openGameEdit(g) {
   $("geMax").value = g.max_players ?? "";
   $("geFile").value = "";
   $("geError").hidden = true;
+
+  $("geOwnersField").hidden = !me.is_admin;
+  const ownersBox = $("geOwners");
+  ownersBox.textContent = "";
+  if (me.is_admin) {
+    for (const m of data.members) {
+      const cb = el("input", { type: "checkbox", value: m.id });
+      cb.checked = g.owners.includes(m.id);
+      ownersBox.append(el("label", { class: "check" }, [cb, document.createTextNode(" " + m.display_name)]));
+    }
+  }
+
   $("formGameEdit").onsubmit = withBusy($("formGameEdit"), async () => {
     try {
       const min = $("geMin").value ? +$("geMin").value : null;
@@ -710,6 +724,10 @@ function openGameEdit(g) {
       if (min !== g.min_players || max !== g.max_players) await api.updateGamePlayers(g.id, min, max);
       const file = $("geFile").files[0];
       if (file) await api.uploadImage(g.id, file);
+      if (me.is_admin) {
+        const ownerIds = [...ownersBox.querySelectorAll("input:checked")].map((c) => c.value);
+        await api.setOwners(g.id, ownerIds);
+      }
     } catch (err) {
       $("geError").textContent = err.message;
       $("geError").hidden = false;

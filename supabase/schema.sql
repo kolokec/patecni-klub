@@ -165,12 +165,14 @@ create policy games_update on games for update to authenticated
     or not exists (select 1 from game_owners o where o.game_id = games.id)
   );
 
--- game_owners: veřejné čtení; „taky mám doma“ = insert sebe; odebrat jen sebe
+-- game_owners: veřejné čtení; „taky mám doma“ = insert sebe, odebrat jen sebe;
+-- admin navíc smí nastavit vlastníka za kohokoliv (např. dodatečně přiřadit
+-- rozšíření tomu, kdo ho fakticky vlastní)
 create policy game_owners_select on game_owners for select using (true);
 create policy game_owners_insert on game_owners for insert to authenticated
-  with check (member_id = current_member_id());
+  with check (member_id = current_member_id() or is_admin());
 create policy game_owners_delete on game_owners for delete to authenticated
-  using (member_id = current_member_id());
+  using (member_id = current_member_id() or is_admin());
 
 -- wishlist: veřejné čtení (tip na dárky); vlastní záznamy si člen spravuje sám
 create policy wishlist_select on wishlist for select using (true);

@@ -29,7 +29,7 @@
       <main class="gallery" id="gallery"></main>
     </div>
 
-    <footer class="site-footer">Established 27.02.2026 · v9</footer>
+    <footer class="site-footer">Established 27.02.2026 · v10</footer>
   </div>
 
   <!-- Přihlášení člena -->
@@ -159,6 +159,10 @@
       <label class="field"><span>Nová fotka (nahradí stávající)</span>
         <input type="file" id="geFile" accept="image/*">
       </label>
+      <div class="field" id="geOwnersField" hidden>
+        <span class="field-label">Vlastníci (admin)</span>
+        <div class="check-row" id="geOwners"></div>
+      </div>
       <p class="dlg-error" id="geError" hidden></p>
       <div class="dlg-buttons">
         <button type="button" class="btn btn-ghost" data-close>Zrušit</button>

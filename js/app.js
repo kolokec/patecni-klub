@@ -7,6 +7,7 @@ let data = { members: [], games: [], events: [], wishlist: [] };
 let me = null;        // přihlášený člen
 let hostView = null;  // člen, jehož sbírku si prohlíží host
 let playerFilter = "all";
+let searchQuery = "";
 
 const $ = (id) => document.getElementById(id);
 
@@ -369,13 +370,27 @@ function matchesFilter(g) {
   return min <= playerFilter && max >= playerFilter;
 }
 
+function matchesSearch(g) {
+  if (!searchQuery.trim()) return true;
+  return norm(g.name).includes(norm(searchQuery));
+}
+
 function renderGallery() {
   const main = $("gallery");
+  const focusedSearch = document.activeElement?.id === "gameSearch";
+  const caret = focusedSearch ? document.activeElement.selectionStart : null;
   main.textContent = "";
   $("layout").classList.toggle("layout--host", !!hostView);
 
-  // filtr počtu hráčů
+  // hledání podle názvu + filtr počtu hráčů
+  const searchBox = el("input", {
+    type: "search", id: "gameSearch", class: "search-input",
+    placeholder: "Hledat hru…", autocomplete: "off",
+    oninput: (e) => { searchQuery = e.target.value; renderGallery(); },
+  });
+  searchBox.value = searchQuery;
   const filters = el("div", { class: "filters" }, [
+    searchBox,
     el("span", { class: "filters-label", text: "Počet hráčů" }),
     el("div", { class: "pill-row" },
       [["all", "Vše"], [1, "1"], [2, "2"], [3, "3"], [4, "4"], ["5plus", "5+"]].map(([val, label]) =>
@@ -387,10 +402,15 @@ function renderGallery() {
   ]);
   main.append(filters);
 
-  const ownedGames = (m) => data.games.filter((g) => g.owners.includes(m.id) && matchesFilter(g))
+  if (focusedSearch) {
+    searchBox.focus();
+    if (caret !== null) searchBox.setSelectionRange(caret, caret);
+  }
+
+  const ownedGames = (m) => data.games.filter((g) => g.owners.includes(m.id) && matchesFilter(g) && matchesSearch(g))
     .sort((a, b) => a.name.localeCompare(b.name, "cs"));
   const wishlistGames = (m) => data.wishlist.filter((w) => w.member_id === m.id)
-    .map((w) => gameById(w.game_id)).filter(Boolean)
+    .map((w) => gameById(w.game_id)).filter(Boolean).filter(matchesSearch)
     .sort((a, b) => a.name.localeCompare(b.name, "cs"));
 
   const renderBlock = (member, isMine, wishFirst = false) => {
@@ -421,15 +441,17 @@ function renderGallery() {
   if (hostView) {
     // host jde hlavně pro tip na dárek – hledáček patří nahoru
     renderBlock(hostView, false, true);
+    showNoResultsIfEmpty(main);
     return;
   }
 
   if (me) {
     renderBlock(me, true);
     for (const m of data.members.filter((m) => m.id !== me.id)) renderBlock(m, false);
+    showNoResultsIfEmpty(main);
   } else {
     // bez přihlášení: všechny hry pohromadě, pak hledáčky členů
-    const all = data.games.filter((g) => g.owners.length && matchesFilter(g))
+    const all = data.games.filter((g) => g.owners.length && matchesFilter(g) && matchesSearch(g))
       .sort((a, b) => a.name.localeCompare(b.name, "cs"));
     const block = el("section", { class: "owner-block" });
     block.append(el("h2", { class: "owner-title" }, [
@@ -449,7 +471,13 @@ function renderGallery() {
       wb.append(tilesGrid(wl, m, true));
       main.append(wb);
     }
+    showNoResultsIfEmpty(main);
   }
+}
+
+function showNoResultsIfEmpty(main) {
+  if (!searchQuery.trim() || main.querySelector(".tile")) return;
+  main.append(el("p", { class: "no-results", text: `Žádná hra neodpovídá hledání „${searchQuery.trim()}“.` }));
 }
 
 function tilesGrid(games, sectionMember, isWishlist = false) {

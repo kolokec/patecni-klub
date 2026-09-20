@@ -337,6 +337,26 @@ button:focus-visible, .tile:focus-visible, input:focus-visible{
   flex-wrap:wrap;
   margin-bottom:26px;
 }
+.search-input{
+  padding:7px 14px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:rgba(10,12,18,0.6);
+  color:var(--ink-0);
+  font-family:inherit;
+  font-size:0.85rem;
+  min-width:180px;
+}
+.search-input::placeholder{ color:var(--ink-1); }
+.search-input:focus{ outline:none; border-color:var(--cyan); }
+.search-input::-webkit-search-cancel-button{ cursor:pointer; }
+
+.no-results{
+  color:var(--ink-1);
+  font-size:0.9rem;
+  padding:20px 0;
+}
+
 .filters-label{
   font-size:0.72rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-1);
 }
